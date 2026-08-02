@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    FileProvider path configuration for KnowItAll.
+
+    This file defines which directories on the device the app is allowed to
+    share files from using a content:// URI. The FileProvider converts a raw
+    File path into a content URI that other apps (PDF viewer, email, etc.)
+    can open without needing direct filesystem access.
+
+    Each <path> element maps an internal name to a real directory:
+
+    external-files-path:
+        Maps to Context.getExternalFilesDir() — this is where
+        SkillPassportGenerator writes PDFs (the "passports" subdirectory).
+        The name="passports" is the alias used in the URI; the path="."
+        means the root of getExternalFilesDir() and all its subdirectories
+        are accessible.
+
+    cache-path:
+        Maps to Context.getCacheDir() — the fallback location used by
+        SkillPassportGenerator if external storage is unavailable.
+
+    Both entries are needed because SkillPassportGenerator tries
+    getExternalFilesDir first and falls back to cacheDir.
+-->
+<paths>
+
+    <files-path name="passports" path="passports/"/>
+    <cache-path name="cache" path="."/>
+    <!-- External app-specific storage — primary PDF output location -->
+    <external-files-path
+        name="passports"
+        path="." />
+
+    <!-- Internal cache — fallback PDF location -->
+    <cache-path
+        name="cache"
+        path="." />
+</paths>

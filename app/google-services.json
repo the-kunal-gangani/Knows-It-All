@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "583193941219",
+    "project_id": "knowsitall-6eaa5",
+    "storage_bucket": "knowsitall-6eaa5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:583193941219:android:1f0868cfc826fec56b61d6",
+        "android_client_info": {
+          "package_name": "com.example.know_it_all"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAGV_QFkuV471ak2BPGvkYeWePO1UAqaQE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
