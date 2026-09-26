@@ -12,19 +12,20 @@ import java.util.UUID
         ForeignKey(
             entity = User::class,
             parentColumns = ["uid"],
-            childColumns = ["institutionId"],
+            childColumns = ["posterId"],
             onDelete = ForeignKey.CASCADE
         )
     ],
     indices = [
-        Index(value = ["institutionId"]),
+        Index(value = ["posterId"]),
         Index(value = ["status"])
     ]
 )
 data class TimeCapsuleNeed(
     @PrimaryKey
     val needId: String = UUID.randomUUID().toString(),
-    val institutionId: String,
+    val posterId: String,
+    val posterRole: UserRole,
     val title: String,
     val needDescription: String,
     val matchedTags: List<String> = emptyList(),
