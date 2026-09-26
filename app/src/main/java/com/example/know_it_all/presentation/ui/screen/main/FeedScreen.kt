@@ -218,6 +218,7 @@ fun FeedScreen(
                                     currentUserId = feedState.items.hashCode().toString(),
                                     onClick = { navController.navigate("group_session/${item.session.sessionId}") }
                                 )
+                                is FeedItem.TimeCapsuleNeedItem -> TimeCapsuleNeedCard(item = item)
                                 else -> {}
                             }
                         }
@@ -1030,5 +1031,148 @@ private fun InitialsAvatar(
             fontWeight = FontWeight.Black,
             color = AcidGreen
         )
+    }
+}
+
+// =============================================================================
+// Time Capsule need card
+// =============================================================================
+
+private fun needAccentColor(role: UserRole) = when (role) {
+    UserRole.INSTITUTION -> Ochre
+    UserRole.RETIREE      -> AcidGreen
+    else                  -> CharcoalGray
+}
+
+private fun needEmoji(role: UserRole) = when (role) {
+    UserRole.INSTITUTION -> "🏛️"
+    UserRole.RETIREE      -> "🎓"
+    else                  -> "⏳"
+}
+
+private fun needLabel(role: UserRole) = when (role) {
+    UserRole.INSTITUTION -> "SEEKING HELP"
+    UserRole.RETIREE      -> "WANTS TO LEARN"
+    else                  -> "TIME CAPSULE"
+}
+
+@Composable
+fun TimeCapsuleNeedCard(item: FeedItem.TimeCapsuleNeedItem) {
+    val need = item.need
+    val accent = needAccentColor(need.posterRole)
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(CreamDark, RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(18.dp))
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(4.dp)
+                .background(accent)
+        )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp, start = 16.dp, end = 16.dp, bottom = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(7.dp)
+                ) {
+                    Text(text = needEmoji(need.posterRole), fontSize = 14.sp)
+                    Text(
+                        text = "TIME CAPSULE · ${needLabel(need.posterRole)}",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = accent,
+                        letterSpacing = 1.2.sp
+                    )
+                }
+                Text(
+                    text = timeAgoString(need.createdAt),
+                    fontSize = 11.sp,
+                    color = WarmGray
+                )
+            }
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                InitialsAvatar(name = item.posterName, size = 48.dp, textSize = 18.sp)
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = need.title,
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Black,
+                        color = NearBlack,
+                        letterSpacing = (-0.3).sp
+                    )
+                    Text(
+                        text = item.posterName,
+                        fontSize = 12.sp,
+                        color = CharcoalGray
+                    )
+                }
+                if (need.urgency == NeedUrgency.HIGH) {
+                    Box(
+                        modifier = Modifier
+                            .background(ErrorRed.copy(alpha = 0.15f), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = "URGENT",
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = ErrorRed,
+                            letterSpacing = 0.5.sp
+                        )
+                    }
+                }
+            }
+
+            if (need.needDescription.isNotBlank()) {
+                Text(
+                    text = "\"${need.needDescription}\"",
+                    fontSize = 12.sp,
+                    color = CharcoalGray,
+                    fontStyle = FontStyle.Italic,
+                    lineHeight = 19.sp,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+
+            if (need.matchedTags.isNotEmpty()) {
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    need.matchedTags.take(3).forEach { tag ->
+                        Box(
+                            modifier = Modifier
+                                .background(accent.copy(alpha = 0.15f), RoundedCornerShape(8.dp))
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Text(text = tag, fontSize = 10.sp, fontWeight = FontWeight.SemiBold, color = accent)
+                        }
+                    }
+                }
+            }
+
+            if (need.offeredInReturn.isNotBlank()) {
+                Text(
+                    text = "Offering in return: ${need.offeredInReturn}",
+                    fontSize = 11.sp,
+                    color = WarmGray
+                )
+            }
+        }
     }
 }

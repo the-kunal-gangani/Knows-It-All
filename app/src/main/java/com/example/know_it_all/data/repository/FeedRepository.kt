@@ -6,6 +6,11 @@ import com.example.know_it_all.data.repository.WishlistItem
 import com.example.know_it_all.data.model.User
 import com.example.know_it_all.data.model.dto.SwapDTO
 import com.example.know_it_all.data.model.GroupSession
+import com.example.know_it_all.data.model.UserRole
+import com.example.know_it_all.data.model.NeedUrgency
+import com.example.know_it_all.data.model.TimeCapsuleNeed
+import com.example.know_it_all.data.model.NeedStatus
+import com.example.know_it_all.data.model.UserRole
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.async
@@ -63,6 +68,13 @@ sealed class FeedItem {
         override val timestamp: Long,
         val session: GroupSession
     ) : FeedItem()
+
+    data class TimeCapsuleNeedItem(
+        override val id: String,
+        override val timestamp: Long,
+        val need: TimeCapsuleNeed,
+        val posterName: String
+    ) : FeedItem()
 }
 
 // ── Repository ────────────────────────────────────────────────────────────────
@@ -73,6 +85,7 @@ class FeedRepository {
     private val skillsCol       = db.collection("skills")
     private val swapsCol        = db.collection("swaps")
     private val usersCol        = db.collection("users")
+    private val timeCapsuleNeedsCol = db.collection("time_capsule_needs")
 
     /**
      * Fetches all feed items in parallel and merges into a single
@@ -89,6 +102,7 @@ class FeedRepository {
             val trendingDeferred        = async { fetchTrendingCategories() }
             val wishlistDeferred        = async { fetchWishlistItems(currentUserId) }
             val groupSessionsDeferred   = async { fetchGroupSessions(currentUserId) }
+            val timeCapsuleDeferred = async { fetchTimeCapsuleNeeds(currentUserId) }
 
             val all = buildList {
                 addAll(newSkillsDeferred.await())
@@ -97,6 +111,7 @@ class FeedRepository {
                 addAll(trendingDeferred.await())
                 addAll(wishlistDeferred.await())
                 addAll(groupSessionsDeferred.await())
+                addAll(timeCapsuleDeferred.await())
             }
 
             // Interleave types so the feed doesn't show all skills then all swaps
@@ -354,6 +369,54 @@ class FeedRepository {
         } catch (e: Exception) { emptyList() }
     }
 
+    // ── Time Capsule needs ────────────────────────────────────────────────────
+
+    private suspend fun fetchTimeCapsuleNeeds(currentUserId: String): List<FeedItem.TimeCapsuleNeedItem> {
+        return try {
+            val snapshot = timeCapsuleNeedsCol
+                .whereEqualTo("status", "OPEN")
+                .orderBy("createdAt", Query.Direction.DESCENDING)
+                .limit(10)
+                .get().await()
+
+            snapshot.documents.mapNotNull { doc ->
+                val posterId = doc.getString("posterId") ?: return@mapNotNull null
+                if (posterId == currentUserId) return@mapNotNull null
+
+                val posterDoc  = usersCol.document(posterId).get().await()
+                val posterName = posterDoc.getString("name") ?: "Unknown"
+
+                val need = TimeCapsuleNeed(
+                    needId          = doc.getString("needId") ?: doc.id,
+                    posterId        = posterId,
+                    posterRole      = runCatching {
+                        UserRole.valueOf(doc.getString("posterRole") ?: "INSTITUTION")
+                    }.getOrDefault(UserRole.INSTITUTION),
+                    title           = doc.getString("title") ?: "",
+                    needDescription = doc.getString("needDescription") ?: "",
+                    matchedTags     = (doc.get("matchedTags") as? List<*>)?.mapNotNull { it as? String } ?: emptyList(),
+                    offeredInReturn = doc.getString("offeredInReturn") ?: "",
+                    urgency         = runCatching {
+                        com.example.know_it_all.data.model.NeedUrgency.valueOf(
+                            doc.getString("urgency") ?: "NORMAL"
+                        )
+                    }.getOrDefault(com.example.know_it_all.data.model.NeedUrgency.NORMAL),
+                    status          = runCatching {
+                        NeedStatus.valueOf(doc.getString("status") ?: "OPEN")
+                    }.getOrDefault(NeedStatus.OPEN),
+                    createdAt       = doc.getLong("createdAt") ?: 0L
+                )
+
+                FeedItem.TimeCapsuleNeedItem(
+                    id          = "timecapsule_${doc.id}",
+                    timestamp   = need.createdAt,
+                    need        = need,
+                    posterName  = posterName
+                )
+            }
+        } catch (e: Exception) { emptyList() }
+    }
+
     // ── Interleave different item types ──────────────────────────────────────
 
     private fun interleave(items: List<FeedItem>): List<FeedItem> {
@@ -363,6 +426,7 @@ class FeedRepository {
         val categories     = items.filterIsInstance<FeedItem.TrendingCategory>()
         val wishes         = items.filterIsInstance<FeedItem.WishlistRequest>()
         val groupSessions  = items.filterIsInstance<FeedItem.GroupSessionItem>()
+        val timeCapsuleNeeds = items.filterIsInstance<FeedItem.TimeCapsuleNeedItem>()
 
         val result = mutableListOf<FeedItem>()
         val maxSize = maxOf(skills.size, swaps.size, mentors.size)
@@ -374,6 +438,7 @@ class FeedRepository {
             if (i % 4 == 0 && i / 4 < wishes.size)  result.add(wishes[i / 4])
             if (i % 5 == 0 && i / 5 < categories.size) result.add(categories[i / 5])
             if (i % 6 == 0 && i / 6 < groupSessions.size) result.add(groupSessions[i / 6])
+            if (i % 4 == 0 && i / 4 < timeCapsuleNeeds.size) result.add(timeCapsuleNeeds[i / 4])
         }
 
         return result
