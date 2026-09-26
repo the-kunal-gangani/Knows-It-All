@@ -4,28 +4,12 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
-/**
- * Fixes applied:
- *  1. Added @Index on email (unique) — auth flow queries by email;
- *     without an index this is a full table scan on every login.
- *  2. Added @Index on latitude + longitude composite — the Radar screen
- *     filters by proximity; a composite spatial index speeds that query.
- *  3. skillTokenBalance kept as Long (correct — token balances can be large).
- *  4. trustScore kept as Float (correct — 0.0–100.0 scale with decimals).
- *  5. createdAt default is fine (set once at registration, never updated).
- *  6. updatedAt default removed — must be set explicitly at the DAO call site,
- *     not at construction time, to reflect actual DB write time accurately.
- *  7. Added isOnline flag for the live green presence dot in the UI
- *     (maps to the pulsing indicator visible in the Dribbble reference).
- *  8. Added skills: List<String> = emptyList() as a denormalized snapshot
- *     of skill names for Radar card display — avoids a JOIN on every map pin.
- *     Source of truth is still the skills table; this is a display cache only.
- */
 @Entity(
     tableName = "users",
     indices = [
-        Index(value = ["email"], unique = true),        // fast auth lookup, enforces uniqueness
-        Index(value = ["latitude", "longitude"])        // spatial filter for Radar screen
+        Index(value = ["email"], unique = true),
+        Index(value = ["latitude", "longitude"]),
+        Index(value = ["role"])
     ]
 )
 data class User(
@@ -39,7 +23,27 @@ data class User(
     val skillTokenBalance: Long = 0L,
     val trustScore: Float = 0f,
     val profileVerified: Boolean = false,
-    val isOnline: Boolean = false,          // ✅ drives pulsing presence indicator in UI
+    val isOnline: Boolean = false,
+    val role: UserRole = UserRole.INDIVIDUAL,
+    val organizationName: String = "",
+    val organizationRegistrationId: String = "",
+    val professionalBackground: String = "",
+    val yearsOfExperience: Int = 0,
+    val verificationStatus: VerificationStatus = VerificationStatus.NOT_SUBMITTED,
+    val verificationDocUrl: String = "",
     val createdAt: Long = System.currentTimeMillis(),
-    val updatedAt: Long = 0L                // ✅ set explicitly at DAO write time, not construction
+    val updatedAt: Long = 0L
 )
+
+enum class UserRole {
+    INDIVIDUAL,
+    RETIREE,
+    INSTITUTION
+}
+
+enum class VerificationStatus {
+    NOT_SUBMITTED,
+    PENDING,
+    VERIFIED,
+    REJECTED
+}
