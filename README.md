@@ -83,6 +83,14 @@ In many communities, valuable skills go untapped because there is no formal mark
 - **Deep Links** — `knowitall://swap/{id}` opens directly to a swap; shareable via WhatsApp
 - **Dark Mode** — Full dark color scheme support via Material 3 theming
 
+### Time Capsule
+- **Retiree ↔ Institution Matching** — Retiring professionals (teachers, engineers, govt employees) connect with schools, panchayats, and NGOs that need their expertise
+- **Dual-Purpose Needs** — Institutions post what they need help with; retirees can post what they want to learn, both matched against structured skill tags
+- **Role-Based Feed Cards** — Distinct icon and accent color for institution vs. retiree posts in the Skill Feed
+- **Manual ID Verification** — Institutions and retirees submit real ID for verification; the document is deleted once verification completes
+- **Legacy Leaderboard** — Trust Leaderboard variant recognizing retirees' contributions
+- **Optional Token Escrow** — Time Capsule swaps can be free/commitment-based or token-based, by mutual agreement
+
 ---
 
 ## How It Works
@@ -367,7 +375,11 @@ users/{userId}
   ├── skillTokenBalance (long)
   ├── trustScore (float)
   ├── isOnline (bool)
-  └── fcmToken (string)
+  ├── fcmToken (string)
+  ├── role (INDIVIDUAL | RETIREE | INSTITUTION)
+  ├── organizationName, organizationRegistrationId (institution only)
+  ├── professionalBackground, yearsOfExperience (retiree only)
+  └── verificationStatus (NOT_SUBMITTED | PENDING | VERIFIED | REJECTED)
 
 skills/{skillId}
   ├── userId, skillName, category
@@ -409,6 +421,15 @@ wishlist/{wishId}
   ├── description, isOpen
   └── createdAt
 
+time_capsule_needs/{needId}
+  ├── posterId, posterRole (RETIREE | INSTITUTION)
+  ├── title, needDescription
+  ├── matchedTags (list, server-populated)
+  ├── offeredInReturn (optional)
+  ├── urgency (LOW | NORMAL | HIGH)
+  ├── status (OPEN | MATCHED | FULFILLED | CLOSED)
+  └── createdAt
+
 streaks/{userId}
   ├── currentStreak, longestStreak
   ├── lastActivityAt, totalActivities
@@ -430,6 +451,7 @@ streaks/{userId}
 | `availability` | Any authenticated user | Owner only |
 | `wishlist` | Any authenticated user | Owner only |
 | `streaks` | Owner only | Owner only |
+| `time_capsule_needs` | Any authenticated user | Poster only (INSTITUTION/RETIREE role required to create) |
 | Everything else | ❌ Blocked | ❌ Blocked |
 
 **Firebase Storage Rules** for Skill Passport HTML pages:

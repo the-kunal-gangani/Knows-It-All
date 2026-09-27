@@ -63,6 +63,8 @@ import com.example.know_it_all.data.repository.FeedItem
 import com.example.know_it_all.presentation.viewmodel.FeedViewModel
 import com.example.know_it_all.presentation.viewmodel.WishlistViewModel
 import com.example.know_it_all.presentation.ui.components.BottomNavigationBar
+import com.example.know_it_all.data.model.UserRole
+import com.example.know_it_all.data.model.NeedUrgency
 import com.example.know_it_all.ui.theme.AcidGreen
 import com.example.know_it_all.ui.theme.CharcoalGray
 import com.example.know_it_all.ui.theme.Cream

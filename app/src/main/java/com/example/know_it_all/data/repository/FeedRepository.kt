@@ -10,7 +10,6 @@ import com.example.know_it_all.data.model.UserRole
 import com.example.know_it_all.data.model.NeedUrgency
 import com.example.know_it_all.data.model.TimeCapsuleNeed
 import com.example.know_it_all.data.model.NeedStatus
-import com.example.know_it_all.data.model.UserRole
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.async
