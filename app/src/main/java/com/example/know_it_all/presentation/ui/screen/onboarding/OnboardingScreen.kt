@@ -68,6 +68,7 @@ import com.example.know_it_all.ui.theme.ErrorRed
 import com.example.know_it_all.ui.theme.NearBlack
 import com.example.know_it_all.ui.theme.Ochre
 import com.example.know_it_all.ui.theme.WarmGray
+
 import kotlinx.coroutines.launch
 
 /**
@@ -86,7 +87,8 @@ fun OnboardingScreen(
     navController: NavHostController,
     authViewModel: AuthViewModel,
     userId: String,
-    userName: String
+    userName: String,
+
 ) {
     val context = LocalContext.current
     val scope   = rememberCoroutineScope()
@@ -101,6 +103,7 @@ fun OnboardingScreen(
     var skillCategory    by remember { mutableStateOf(SkillCategory.DIGITAL) }
     var skillLevel       by remember { mutableStateOf("BEGINNER") }
     var skillTokens      by remember { mutableIntStateOf(10) }
+    
 
     // Step 3 — availability state
     var availDay      by remember { mutableStateOf(DayOfWeek.MONDAY) }
@@ -151,7 +154,12 @@ fun OnboardingScreen(
                 ) {
                     when (step) {
                         // ── Step 1: Welcome ───────────────────────────────────
-                        0 -> WelcomeStep(userName = userName)
+                        0 -> WelcomeStep(
+                            userName = userName,
+                            userRole = userRole,
+                            professionalBackground = professionalBackground,
+                            onProfessionalBackgroundChange = { professionalBackground = it}
+                        )
 
                         // ── Step 2: Add first skill ───────────────────────────
                         1 -> AddSkillStep(
