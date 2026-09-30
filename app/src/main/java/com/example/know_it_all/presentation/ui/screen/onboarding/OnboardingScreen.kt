@@ -59,6 +59,7 @@ import com.example.know_it_all.data.repository.AvailabilityRepository
 import com.example.know_it_all.data.repository.FirebaseSkillRepository
 import com.example.know_it_all.presentation.ui.navigation.Screen
 import com.example.know_it_all.presentation.viewmodel.AuthViewModel
+import com.example.know_it_all.data.repository.UserRepository
 import com.example.know_it_all.ui.theme.AcidGreen
 import com.example.know_it_all.ui.theme.CharcoalGray
 import com.example.know_it_all.ui.theme.Cream
@@ -113,6 +114,7 @@ fun OnboardingScreen(
 
     val skillRepository        = remember { FirebaseSkillRepository() }
     val availabilityRepository = remember { AvailabilityRepository() }
+    val userRepository = remember { UserRepository() }
 
     val totalSteps = 4
 
@@ -215,7 +217,33 @@ fun OnboardingScreen(
                 onClick = {
                     error = null
                     when (currentStep) {
-                        0 -> currentStep = 1
+                        0 -> {
+                            if (userRole == UserRole.RETIREE && professionalBackground.isBlank()) {
+                                error = "Please share your professional background"
+                                return@Button
+                            }
+                            if (userRole == UserRole.RETIREE) {
+                                isLoading = true
+                                scope.launch {
+                                    userRepository.updateProfessionalBackground(
+                                        userId = userId,
+                                        professionalBackground = professionalBackground.trim(),
+                                        yearsOfExperience = 0   // see note below
+                                    ).fold(
+                                        onSuccess = {
+                                            isLoading = false
+                                            currentStep = 1
+                                        },
+                                        onFailure = { e ->
+                                            isLoading = false
+                                            error = e.message ?: "Failed to save background"
+                                        }
+                                    )
+                                }
+                            } else {
+                                currentStep = 1
+                            }
+                        }
 
                         1 -> {
                             // Validate skill form

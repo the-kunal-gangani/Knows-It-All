@@ -106,7 +106,6 @@ class FirebaseSkillRepository {
             
             // Record streak activity
             StreakRepository().recordActivity(userId)
-            
             Result.success(skill)
         } catch (e: Exception) {
             Result.failure(e)
